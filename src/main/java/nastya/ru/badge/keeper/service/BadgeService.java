@@ -2,6 +2,7 @@ package nastya.ru.badge.keeper.service;
 
 import nastya.ru.badge.keeper.api.common.Position;
 import nastya.ru.badge.keeper.api.request.badge.CreateBadgeRequest;
+import nastya.ru.badge.keeper.api.response.badge.GetAllBadgesResponse;
 import nastya.ru.badge.keeper.api.response.badge.GetBadgeResponse;
 import nastya.ru.badge.keeper.entity.Badge;
 import nastya.ru.badge.keeper.entity.Employee;
@@ -39,10 +40,11 @@ public class BadgeService {
         );
     }
 
-    public List<GetBadgeResponse> findAll() {
-        return badgeRepository.findAll().stream()
+    public GetAllBadgesResponse findAll() {
+        List<GetBadgeResponse> allBadge = badgeRepository.findAll().stream()
                 .map(this::toBadgeResponse)
                 .toList();
+        return new GetAllBadgesResponse(allBadge);
     }
 
     @Transactional

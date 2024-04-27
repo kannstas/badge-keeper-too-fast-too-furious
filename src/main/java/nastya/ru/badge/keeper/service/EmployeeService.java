@@ -2,6 +2,7 @@ package nastya.ru.badge.keeper.service;
 
 import nastya.ru.badge.keeper.api.request.employee.CreateEmployeeRequest;
 import nastya.ru.badge.keeper.api.request.employee.UpdateEmployeeRequest;
+import nastya.ru.badge.keeper.api.response.employee.GetAllEmployeesResponse;
 import nastya.ru.badge.keeper.api.response.employee.GetEmployeeResponse;
 import nastya.ru.badge.keeper.entity.Employee;
 import nastya.ru.badge.keeper.repository.EmployeeRepository;
@@ -31,10 +32,12 @@ public class EmployeeService {
         );
     }
 
-    public List<GetEmployeeResponse> findAll() {
-        return employeeRepository.findAll().stream()
+    public GetAllEmployeesResponse findAll() {
+        List<GetEmployeeResponse> allEmployeesResponse = employeeRepository.findAll().stream()
                 .map(this::toEmployeeResponse)
                 .toList();
+
+        return new GetAllEmployeesResponse(allEmployeesResponse);
     }
 
     @Transactional
