@@ -1,0 +1,53 @@
+version: '3.8'
+
+volumes:
+  badge_keeper_vol2_db:
+
+services:
+  badge_keeper_vol2_db:
+    container_name: badge_keeper_vol2_db
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: badge_keeper_vol2_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - badge_keeper_vol2_db:/var/lib/postgresql/data
+
+  badge_keeper_app:
+    container_name: badge_keeper_app
+    restart: always
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - badge_keeper_vol2_db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://badge_keeper_vol2_db:5432/badge_keeper_vol2_db
+
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.4
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
