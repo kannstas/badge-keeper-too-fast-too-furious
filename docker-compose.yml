@@ -1,21 +1,21 @@
 version: '3.8'
 
 volumes:
-  badge_keeper_vol2_db:
+  postgres:
 
 services:
-  badge_keeper_vol2_db:
-    container_name: badge_keeper_vol2_db
+  postgres:
+    container_name: postgres
     image: postgres:16
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: badge_keeper_vol2_db
     ports:
       - "5432:5432"
     volumes:
-      - badge_keeper_vol2_db:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+      - postgres:/var/lib/postgresql/data
 
   badge_keeper_app:
     container_name: badge_keeper_app
@@ -24,9 +24,20 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - badge_keeper_vol2_db
+      - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://badge_keeper_vol2_db:5432/badge_keeper_vol2_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/badge_keeper_vol2_db
+
+  badge_keeper_logger:
+    container_name: badge_keeper_logger
+    restart: always
+    build: .
+    ports:
+      - "9090:8080"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/badge_keeper_logger
 
   zookeeper:
     container_name: zookeeper
