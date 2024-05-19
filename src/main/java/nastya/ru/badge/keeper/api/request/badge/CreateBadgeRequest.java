@@ -18,4 +18,16 @@ public class CreateBadgeRequest{
     public String getBadgeSerialNumber() {
         return badgeSerialNumber;
     }
+
+    public void setRecipientEmployeeId(UUID recipientEmployeeId) {
+        this.recipientEmployeeId = recipientEmployeeId;
+    }
+
+    public void setIssuerEmployeeId(UUID issuerEmployeeId) {
+        this.issuerEmployeeId = issuerEmployeeId;
+    }
+
+    public void setBadgeSerialNumber(String badgeSerialNumber) {
+        this.badgeSerialNumber = badgeSerialNumber;
+    }
 }

@@ -1,3 +1,4 @@
+
 CREATE TABLE employees
 (
     id         UUID PRIMARY KEY            NOT NULL,

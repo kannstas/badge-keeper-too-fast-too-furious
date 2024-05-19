@@ -13,4 +13,12 @@ public class CreateEmployeeRequest{
     public String getDepartment() {
         return department;
     }
+
+    public void setPosition(Position position) {
+        this.position = position;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
 }

@@ -2,6 +2,7 @@ package nastya.ru.badge.keeper.entity;
 
 import jakarta.persistence.*;
 import nastya.ru.badge.keeper.api.common.Position;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

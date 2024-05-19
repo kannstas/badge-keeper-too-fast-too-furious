@@ -29,6 +29,7 @@ public class Badge {
     public Badge() {
     }
 
+
     public UUID getId() {
         return id;
     }
@@ -85,5 +86,16 @@ public class Badge {
         this.active = active;
     }
 
-
+    @Override
+    public String toString() {
+        return "Badge{" +
+               "id=" + id +
+               ", recipientEmployee=" + recipientEmployee +
+               ", issuerEmployee=" + issuerEmployee +
+               ", badgeSerialNumber='" + badgeSerialNumber + '\'' +
+               ", issuanceDate=" + issuanceDate +
+               ", expirationDate=" + expirationDate +
+               ", active=" + active +
+               '}';
+    }
 }

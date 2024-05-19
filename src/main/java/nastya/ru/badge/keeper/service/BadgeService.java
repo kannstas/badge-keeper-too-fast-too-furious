@@ -1,6 +1,8 @@
 package nastya.ru.badge.keeper.service;
 
 import nastya.ru.badge.keeper.api.common.Position;
+import nastya.ru.badge.keeper.api.message.AllBadgeMessages;
+import nastya.ru.badge.keeper.api.message.BadgeMessage;
 import nastya.ru.badge.keeper.api.request.badge.CreateBadgeRequest;
 import nastya.ru.badge.keeper.api.response.badge.GetAllBadgesResponse;
 import nastya.ru.badge.keeper.api.response.badge.GetBadgeResponse;
@@ -8,9 +10,9 @@ import nastya.ru.badge.keeper.entity.Badge;
 import nastya.ru.badge.keeper.entity.Employee;
 import nastya.ru.badge.keeper.repository.BadgeRepository;
 import nastya.ru.badge.keeper.repository.EmployeeRepository;
+import nastya.ru.badge.keeper.util.convertion.BadgeConvert;
 import nastya.ru.badge.keeper.util.exception.BusinessLogicException;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.convention.MatchingStrategies;
+import nastya.ru.badge.keeper.util.exception.IdNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,36 +21,54 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
+
+import static nastya.ru.badge.keeper.util.convertion.BadgeConvert.toBadge;
+import static nastya.ru.badge.keeper.util.convertion.BadgeConvert.toBadgeResponse;
 
 @Service
 @Transactional(readOnly = true)
 public class BadgeService {
     private BadgeRepository badgeRepository;
     private EmployeeRepository employeeRepository;
-    private ModelMapper modelMapper;
-
+    Logger logger = Logger.getLogger(BadgeService.class.getName());
     @Autowired
-    public BadgeService(BadgeRepository badgeRepository, EmployeeRepository employeeRepository, ModelMapper modelMapper) {
+    public BadgeService(BadgeRepository badgeRepository, EmployeeRepository employeeRepository) {
         this.badgeRepository = badgeRepository;
         this.employeeRepository = employeeRepository;
-        this.modelMapper = modelMapper;
     }
 
     public GetBadgeResponse findById(UUID id) {
+        logger.info("get badge by id: start: id = %s".formatted(id));
+
         return toBadgeResponse(
-                badgeRepository.findById(id).orElseThrow()
+                badgeRepository.findById(id).orElseThrow(() -> new IdNotFoundException("badge", id))
         );
     }
 
     public GetAllBadgesResponse findAll() {
+        logger.info("get all badges: start");
+
         List<GetBadgeResponse> allBadge = badgeRepository.findAll().stream()
-                .map(this::toBadgeResponse)
+                .map(BadgeConvert::toBadgeResponse)
                 .toList();
         return new GetAllBadgesResponse(allBadge);
     }
 
+
+    public AllBadgeMessages findAllBadgeMessageWhereActiveIsTrue() {
+        logger.info("get all badge messages where active is true: start");
+        List<BadgeMessage> badgeMessages = badgeRepository.findBadgeByActiveIsTrue().stream()
+                .map(BadgeConvert::toBadgeMessage)
+                .toList();
+        return new AllBadgeMessages(badgeMessages);
+    }
+
+
     @Transactional
     public void save(CreateBadgeRequest badgeRequest) {
+        logger.info("save badge: start: request = %s".formatted(badgeRequest));
+
         employeeRepository.findById(badgeRequest.getRecipientEmployeeId());
         Employee issueEmployee = employeeRepository.findById(badgeRequest.getIssuerEmployeeId()).orElseThrow();
 
@@ -68,32 +88,12 @@ public class BadgeService {
 
     @Transactional
     public void disable(UUID id) {
+        logger.info("disable badge: start: id = %s".formatted(id));
+
         Badge badge = badgeRepository.findById(id).orElseThrow();
         badge.setActive(false);
     }
 
 
-    private Badge toBadge(CreateBadgeRequest badgeRequest) {
-        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        Badge badge = modelMapper.map(badgeRequest, Badge.class);
-        Employee recipientEmployee = new Employee();
-        recipientEmployee.setId(badgeRequest.getRecipientEmployeeId());
-        badge.setRecipientEmployee(recipientEmployee);
 
-        Employee issuerEmployee = new Employee();
-        issuerEmployee.setId(badgeRequest.getIssuerEmployeeId());
-        badge.setIssuerEmployee(issuerEmployee);
-
-        return badge;
-    }
-
-    private GetBadgeResponse toBadgeResponse(Badge badge) {
-        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        GetBadgeResponse badgeResponse = modelMapper.map(badge, GetBadgeResponse.class);
-
-        badgeResponse.setRecipientEmployeeId(badge.getRecipientEmployee().getId());
-        badgeResponse.setIssuerEmployeeId(badge.getIssuerEmployee().getId());
-
-        return badgeResponse;
-    }
 }

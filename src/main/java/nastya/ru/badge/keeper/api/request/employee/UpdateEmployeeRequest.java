@@ -21,4 +21,16 @@ public class UpdateEmployeeRequest{
     public String getDepartment() {
         return department;
     }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setPosition(Position position) {
+        this.position = position;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
 }

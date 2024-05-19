@@ -1,8 +1,11 @@
 package nastya.ru.badge.keeper.api.response.badge;
 
+
+import lombok.Data;
+
 import java.time.Instant;
 import java.util.UUID;
-
+@Data
 public class GetBadgeResponse {
     private UUID id;
     private UUID recipientEmployeeId;

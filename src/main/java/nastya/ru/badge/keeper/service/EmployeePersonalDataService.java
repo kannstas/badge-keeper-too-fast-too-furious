@@ -8,29 +8,33 @@ import nastya.ru.badge.keeper.entity.Employee;
 import nastya.ru.badge.keeper.entity.EmployeePersonalData;
 import nastya.ru.badge.keeper.repository.EmployeePersonalDataRepository;
 import nastya.ru.badge.keeper.repository.EmployeeRepository;
+import nastya.ru.badge.keeper.util.convertion.EmployeePersonalDataConvert;
 import nastya.ru.badge.keeper.util.exception.IdNotFoundException;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
+
+import static nastya.ru.badge.keeper.util.convertion.EmployeePersonalDataConvert.toEmployeePersonalData;
+import static nastya.ru.badge.keeper.util.convertion.EmployeePersonalDataConvert.toEmployeePersonalDataResponse;
 
 @Service
 @Transactional(readOnly = true)
 public class EmployeePersonalDataService {
     private EmployeePersonalDataRepository employeePersonalDataRepository;
     private EmployeeRepository employeeRepository;
-    private ModelMapper modelMapper;
+    Logger logger = Logger.getLogger(EmployeePersonalDataService.class.getName());
 
-    public EmployeePersonalDataService(EmployeePersonalDataRepository employeePersonalDataRepository, EmployeeRepository employeeRepository, ModelMapper modelMapper) {
+    public EmployeePersonalDataService(EmployeePersonalDataRepository employeePersonalDataRepository, EmployeeRepository employeeRepository) {
         this.employeePersonalDataRepository = employeePersonalDataRepository;
         this.employeeRepository = employeeRepository;
-        this.modelMapper = modelMapper;
     }
 
     public GetEmployeePersonalDataResponse findByEmployeeId(UUID employeeId) {
+        logger.info("get personal data by employeeId: start: id = %s".formatted(employeeId));
+
         return toEmployeePersonalDataResponse(
                 employeePersonalDataRepository.findEmployeePersonalDataByEmployeeId(employeeId)
                         .orElseThrow(() -> new IdNotFoundException("employee", employeeId))
@@ -38,8 +42,10 @@ public class EmployeePersonalDataService {
     }
 
     public GetAllEmployeesPersonalDataResponse findAll() {
+        logger.info("get all personal data start:");
+
         List<GetEmployeePersonalDataResponse> personalDataList = employeePersonalDataRepository.findAll()
-                .stream().map(this::toEmployeePersonalDataResponse)
+                .stream().map(EmployeePersonalDataConvert::toEmployeePersonalDataResponse)
                 .toList();
 
         return new GetAllEmployeesPersonalDataResponse(personalDataList);
@@ -47,6 +53,8 @@ public class EmployeePersonalDataService {
 
     @Transactional
     public void save(CreateEmployeePersonalDataRequest request) {
+        logger.info("save employeePersonalData: start: request = %s".formatted(request));
+
         employeeRepository.findById(request.getEmployeeId())
                 .orElseThrow(() -> new IdNotFoundException("employee", request.getEmployeeId()));
         EmployeePersonalData personalData =  toEmployeePersonalData(request);
@@ -57,6 +65,8 @@ public class EmployeePersonalDataService {
 
     @Transactional
     public void update(UpdateEmployeePersonalDataRequest request) {
+        logger.info("update employeePersonalData: start: request = %s".formatted(request));
+
         EmployeePersonalData personalData = employeePersonalDataRepository.findEmployeePersonalDataByEmployeeId(request.getEmployeeId())
                 .orElseThrow(() -> new IdNotFoundException("employee", request.getEmployeeId()));
         Employee employee = new Employee();
@@ -74,24 +84,8 @@ public class EmployeePersonalDataService {
 
     @Transactional
     public void delete(UUID id) {
+        logger.info("get by employeeId: start: id = %s".formatted(id));
+
         employeePersonalDataRepository.deleteById(id);
-    }
-
-    private EmployeePersonalData toEmployeePersonalData(CreateEmployeePersonalDataRequest request) {
-        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        EmployeePersonalData employeePersonalData = modelMapper.map(request, EmployeePersonalData.class);
-        Employee employee = new Employee();
-        employee.setId(request.getEmployeeId());
-        employeePersonalData.setEmployee(employee);
-
-        return employeePersonalData;
-    }
-
-    private GetEmployeePersonalDataResponse toEmployeePersonalDataResponse(EmployeePersonalData personalData) {
-        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        GetEmployeePersonalDataResponse personalDataResponse = modelMapper.map(personalData, GetEmployeePersonalDataResponse.class);
-        personalDataResponse.setEmployeeId(personalData.getEmployee().getId());
-
-        return personalDataResponse;
     }
 }
